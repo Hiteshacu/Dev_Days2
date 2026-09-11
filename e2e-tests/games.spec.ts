@@ -24,6 +24,29 @@ test.describe('Game Listing and Navigation', () => {
     });
   });
 
+  test('should filter games by publisher', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('publisher-filter').selectOption({ label: 'CodeForge Studios' });
+    await page.getByTestId('apply-filters').click();
+
+    await expect(page).toHaveURL(/publisher=\d+/);
+    await expect(page.locator('[data-testid="game-card"]:visible')).toHaveCount(6);
+    await expect(page.getByTestId('filtered-empty-state')).toBeHidden();
+  });
+
+  test('should combine multiple category filters with a publisher filter', async ({ page }) => {
+    await page.goto('/');
+    const categoryFilters = page.locator('input[name="category"]');
+    await categoryFilters.nth(0).check();
+    await categoryFilters.nth(1).check();
+    await page.getByTestId('publisher-filter').selectOption({ label: 'CodeForge Studios' });
+    await page.getByTestId('apply-filters').click();
+
+    await expect(page).toHaveURL(/category=\d+&category=\d+&publisher=\d+/);
+    await expect(page.getByTestId('clear-filters')).toBeVisible();
+    await expect(page.getByTestId('games-grid')).toBeVisible();
+  });
+
   test('should navigate to correct game details page when clicking on a game', async ({ page }) => {
     let gameId: string | null;
     let gameTitle: string | null;
